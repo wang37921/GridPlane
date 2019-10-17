@@ -12,8 +12,6 @@ public enum GridUsage
 [System.Serializable]
 public class GridData
 {
-    public int X;
-    public int Y;
     public GridUsage UsageFlag;
 }
 
@@ -59,7 +57,7 @@ public class GridPlane : MonoBehaviour
                 if (oldElementIndex != -1 && Grids?.Length> oldElementIndex)
                     grids[elementIndex] = Grids[oldElementIndex];
                 else
-                    grids[elementIndex] = new GridData { X = row, Y = col, UsageFlag = GridUsage.Plant|GridUsage.Furniture|GridUsage.Building };
+                    grids[elementIndex] = new GridData { UsageFlag = GridUsage.Plant|GridUsage.Furniture|GridUsage.Building };
             }
         }
         Grids = grids;
