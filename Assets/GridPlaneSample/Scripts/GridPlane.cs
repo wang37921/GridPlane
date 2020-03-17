@@ -85,19 +85,36 @@ public class GridPlane : MonoBehaviour
         return ColumnBeginPosition(col) + transform.forward * Row * GridSize.y;
     }
 
+    public Vector3 GetGridOriginInLocal(int row, int col)
+    {
+        var localPos = new Vector3(col * GridSize.x, 0.0f, row * GridSize.y);
+        return transform.TransformPoint(localPos);
+    }
+
+    public Vector3 GetGridOrigin(int cellIndex)
+    {
+        if (Index2Dimension(Row, Column, cellIndex, out int rowIndex, out int columnIndex))
+            return GetGridOrigin(rowIndex, columnIndex);
+        return default;
+    }
+    public Vector3 GetGridOrigin(int row, int col)
+    {
+        return transform.TransformPoint(GetGridOriginInLocal(row, col));
+    }
+    public Vector3 GetGridCenterInLocal(int row, int col)
+    {
+        return GetGridOriginInLocal(row, col) + new Vector3(0.5f * _gridSize.x, 0.0f, 0.5f * _gridSize.y);
+    }
+
     public Vector3 GetGridCenter(int row, int col)
     {
-        var localPos = new Vector3((col + 0.5f) * GridSize.x, 0.0f, (row + 0.5f) * GridSize.y);
-        return transform.TransformPoint(localPos);
+        return transform.TransformPoint(GetGridCenterInLocal(row, col));
     }
 
     public Vector3 GetGridCenter(int gridIndex)
     {
         if (Index2Dimension(Row, Column, gridIndex, out int rowIndex, out int columnIndex))
-        {
-            var localPos = new Vector3((columnIndex + 0.5f) * GridSize.x, 0.0f, (rowIndex + 0.5f) * GridSize.y);
-            return transform.TransformPoint(localPos);
-        }
+            return GetGridCenter(rowIndex, columnIndex);
         else
             return transform.position;
     }

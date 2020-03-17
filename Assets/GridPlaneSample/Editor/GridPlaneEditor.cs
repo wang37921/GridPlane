@@ -176,22 +176,39 @@ public class GridPlaneEditor : Editor
         for (var gridIndex = 0; gridIndex != gridPlane.Grids.Length; ++gridIndex)
         {
             var grid = gridPlane.Grids[gridIndex];
-            var gridCenter = gridPlane.GetGridCenter(gridIndex);
+            var cellOrigin = gridPlane.GetGridOrigin(gridIndex) + new Vector3(1, 0, 1) * 0.25f;
             if (grid != null)
             {
                 if (grid.UsageFlag.HasFlag(GridUsage.Plant))
-                    Gizmos.DrawIcon(gridCenter - gridPlane.transform.right * 0.3f, "plant");
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
                 if (grid.UsageFlag.HasFlag(GridUsage.Furniture))
-                    Gizmos.DrawIcon(gridCenter, "furniture");
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
                 if (grid.UsageFlag.HasFlag(GridUsage.Building))
-                    Gizmos.DrawIcon(gridCenter + gridPlane.transform.right * 0.3f, "building");
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
             }
             else
             {
-                Gizmos.DrawIcon(gridCenter - gridPlane.transform.right * 0.3f, "plant");
-                Gizmos.DrawIcon(gridCenter, "furniture");
-                Gizmos.DrawIcon(gridCenter + gridPlane.transform.right * 0.3f, "building");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
             }
         }
+    }
+
+    static Vector3 GetCellItemPosition(Vector3 originPos, float cellWidth, float cellHeight, 
+        Vector3 mainAxis, Vector3 crossAxis, 
+        int itemCount, int itemIndex)
+    {
+        var rectDimension = 1;
+        while (true)
+        {
+            if (itemCount <= rectDimension * rectDimension)
+                break;
+            else
+                ++rectDimension;
+        }
+        var row = itemIndex / rectDimension;
+        var col = itemIndex % rectDimension;
+        return originPos + mainAxis * col / rectDimension * cellWidth + crossAxis * row / rectDimension * cellHeight;
     }
 }
