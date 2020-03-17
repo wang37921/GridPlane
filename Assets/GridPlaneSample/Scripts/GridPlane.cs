@@ -159,4 +159,9 @@ public class GridPlane : MonoBehaviour
         row = 0; col = 0;
         return false;
     }
+
+    public bool IsValidCellIndex(int cellIndex)
+    {
+        return cellIndex >= 0 && cellIndex < _row * _column;
+    }
 }
