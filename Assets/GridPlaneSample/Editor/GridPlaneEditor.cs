@@ -6,6 +6,10 @@ using System.Collections.Generic;
 [CustomEditor(typeof(GridPlane))]
 public class GridPlaneEditor : Editor
 {
+    const string GizmosFurniture = "GridPlane/Furniture";
+    const string GizmosBuilding = "GridPlane/Building";
+    const string GizmosPlant = "GridPlane/Plant";
+
     bool _isEditing = false;
     CellUsage _editingUsages;
     HashSet<int> _brushingCells = new HashSet<int>();
@@ -168,17 +172,17 @@ public class GridPlaneEditor : Editor
             if (cell != null)
             {
                 if (cell.UsageFlag.HasFlag(CellUsage.Plant))
-                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 0), GizmosPlant);
                 if (cell.UsageFlag.HasFlag(CellUsage.Furniture))
-                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 1), GizmosFurniture);
                 if (cell.UsageFlag.HasFlag(CellUsage.Building))
-                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 2), GizmosBuilding);
             }
             else
             {
-                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
-                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
-                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 0), GizmosPlant);
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 1), GizmosFurniture);
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 2), GizmosBuilding);
             }
         }
     }
