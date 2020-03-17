@@ -227,6 +227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 492e378d1121f5d42b8a87cb042884d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  occupyCellIndexs: 01000000
 --- !u!65 &314651736
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -331,6 +332,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 492e378d1121f5d42b8a87cb042884d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  occupyCellIndexs: 00000000
 --- !u!65 &401845473
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -502,12 +504,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _row: 2
   _column: 2
-  _gridSize: {x: 1, y: 1}
-  Grids:
-  - UsageFlag: 7
-  - UsageFlag: 7
+  _cellSize: {x: 1, y: 1}
+  Cells:
+  - UsageFlag: 3
   - UsageFlag: 2
-  - UsageFlag: 7
+  - UsageFlag: 3
+  - UsageFlag: 2
 --- !u!4 &985625234
 Transform:
   m_ObjectHideFlags: 0

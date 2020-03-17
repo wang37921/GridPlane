@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 [System.Flags]
-public enum GridUsage
+public enum CellUsage
 {
     None = 0,
     Furniture = 1,
@@ -10,9 +10,9 @@ public enum GridUsage
 }
 
 [System.Serializable]
-public class GridData
+public class CellData
 {
-    public GridUsage UsageFlag;
+    public CellUsage UsageFlag;
 }
 
 public class GridPlane : MonoBehaviour
@@ -24,11 +24,11 @@ public class GridPlane : MonoBehaviour
     int _column = 1;
     public int Column => _column;
     [SerializeField]
-    Vector2 _gridSize = Vector2.one;
-    public Vector2 GridSize => _gridSize;
+    Vector2 _cellSize = Vector2.one;
+    public Vector2 CellSize => _cellSize;
 
     // NOTE: Unity does not serialize multidimensional array!
-    public GridData[] Grids;
+    public CellData[] Cells;
 
     public static int Dimension2Index(int row, int col, int rowIndex, int colIndex)
     {
@@ -47,114 +47,114 @@ public class GridPlane : MonoBehaviour
 
     public void UpdateDimension(int row, int col)
     {
-        var grids = new GridData[row * col];
+        var cells = new CellData[row * col];
         for (var rowIndex = 0; rowIndex < row; ++rowIndex)
         {
             for (var colIndex = 0; colIndex < col; ++colIndex)
             {
                 var elementIndex = Dimension2Index(row, col, rowIndex, colIndex);
                 var oldElementIndex = Dimension2Index(_row, _column, rowIndex, colIndex);
-                if (oldElementIndex != -1 && Grids?.Length> oldElementIndex)
-                    grids[elementIndex] = Grids[oldElementIndex];
+                if (oldElementIndex != -1 && Cells?.Length> oldElementIndex)
+                    cells[elementIndex] = Cells[oldElementIndex];
                 else
-                    grids[elementIndex] = new GridData { UsageFlag = GridUsage.Plant|GridUsage.Furniture|GridUsage.Building };
+                    cells[elementIndex] = new CellData { UsageFlag = CellUsage.Plant|CellUsage.Furniture|CellUsage.Building };
             }
         }
-        Grids = grids;
+        Cells = cells;
         _row = row;
         _column = col;
     }
 
     public Vector3 RowBeginPosition(int row)
     {
-        return transform.position + transform.forward * row * GridSize.y;
+        return transform.position + transform.forward * row * CellSize.y;
     }
 
     public Vector3 RowEndPosition(int row)
     {
-        return RowBeginPosition(row) + transform.right * Column * GridSize.x;
+        return RowBeginPosition(row) + transform.right * Column * CellSize.x;
     }
 
     public Vector3 ColumnBeginPosition(int col)
     {
-        return transform.position + transform.right * col * GridSize.x;
+        return transform.position + transform.right * col * CellSize.x;
     }
 
     public Vector3 ColumnEndPosition(int col)
     {
-        return ColumnBeginPosition(col) + transform.forward * Row * GridSize.y;
+        return ColumnBeginPosition(col) + transform.forward * Row * CellSize.y;
     }
 
-    public Vector3 GetGridOriginInLocal(int row, int col)
+    public Vector3 GetCellOriginInLocal(int row, int col)
     {
-        var localPos = new Vector3(col * GridSize.x, 0.0f, row * GridSize.y);
+        var localPos = new Vector3(col * CellSize.x, 0.0f, row * CellSize.y);
         return transform.TransformPoint(localPos);
     }
 
-    public Vector3 GetGridOrigin(int cellIndex)
+    public Vector3 GetCellOrigin(int cellIndex)
     {
         if (Index2Dimension(Row, Column, cellIndex, out int rowIndex, out int columnIndex))
-            return GetGridOrigin(rowIndex, columnIndex);
+            return GetCellOrigin(rowIndex, columnIndex);
         return default;
     }
-    public Vector3 GetGridOrigin(int row, int col)
+    public Vector3 GetCellOrigin(int row, int col)
     {
-        return transform.TransformPoint(GetGridOriginInLocal(row, col));
+        return transform.TransformPoint(GetCellOriginInLocal(row, col));
     }
-    public Vector3 GetGridCenterInLocal(int row, int col)
+    public Vector3 GetCellCenterInLocal(int row, int col)
     {
-        return GetGridOriginInLocal(row, col) + new Vector3(0.5f * _gridSize.x, 0.0f, 0.5f * _gridSize.y);
-    }
-
-    public Vector3 GetGridCenter(int row, int col)
-    {
-        return transform.TransformPoint(GetGridCenterInLocal(row, col));
+        return GetCellOriginInLocal(row, col) + new Vector3(0.5f * _cellSize.x, 0.0f, 0.5f * _cellSize.y);
     }
 
-    public Vector3 GetGridCenter(int gridIndex)
+    public Vector3 GetCellCenter(int row, int col)
     {
-        if (Index2Dimension(Row, Column, gridIndex, out int rowIndex, out int columnIndex))
-            return GetGridCenter(rowIndex, columnIndex);
+        return transform.TransformPoint(GetCellCenterInLocal(row, col));
+    }
+
+    public Vector3 GetCellCenter(int cellIndex)
+    {
+        if (Index2Dimension(Row, Column, cellIndex, out int rowIndex, out int columnIndex))
+            return GetCellCenter(rowIndex, columnIndex);
         else
             return transform.position;
     }
 
-    public bool GetGrid(Vector3 worldPos, out int row, out int col)
+    public bool GetCell(Vector3 worldPos, out int row, out int col)
     {
         var localPos = transform.InverseTransformPoint(worldPos);
-        row = Mathf.FloorToInt(localPos.y / _gridSize.y);
-        col = Mathf.FloorToInt(localPos.x / _gridSize.x);
+        row = Mathf.FloorToInt(localPos.y / _cellSize.y);
+        col = Mathf.FloorToInt(localPos.x / _cellSize.x);
         return row >=0 && row < _row && col >= 0 && col < _column;
     }
 
-    public int GetGrid(Vector3 worldPos)
+    public int GetCellIndex(Vector3 worldPos)
     {
         var localPos = transform.InverseTransformPoint(worldPos);
-        var rowIndex = Mathf.FloorToInt(localPos.z / _gridSize.y);
-        var colIndex = Mathf.FloorToInt(localPos.x / _gridSize.x);
-        var gridIndex = Dimension2Index(Row, Column, rowIndex, colIndex);
-        return gridIndex < Grids.Length ? gridIndex : -1;
+        var rowIndex = Mathf.FloorToInt(localPos.z / _cellSize.y);
+        var colIndex = Mathf.FloorToInt(localPos.x / _cellSize.x);
+        var cellIndex = Dimension2Index(Row, Column, rowIndex, colIndex);
+        return cellIndex < Cells.Length ? cellIndex : -1;
     }
 
-    public int GetGrid(Ray ray)
+    public int GetCellIndex(Ray ray)
     {
         var plane = new Plane(transform.up, transform.position);
         if (plane.Raycast(ray, out float enter))
         {
             var point = ray.GetPoint(enter);
-            return GetGrid(point);
+            return GetCellIndex(point);
         }
         else
             return -1;
     }
 
-    public bool GetGrid(Ray ray, out int row, out int col)
+    public bool GetCell(Ray ray, out int row, out int col)
     {
         var plane = new Plane(transform.up, transform.position);
         if (plane.Raycast(ray, out float enter))
         {
             var point = ray.GetPoint(enter);
-            return GetGrid(point, out row, out col);
+            return GetCell(point, out row, out col);
         }
         row = 0; col = 0;
         return false;

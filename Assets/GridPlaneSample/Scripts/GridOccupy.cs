@@ -5,5 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class GridOccupy : MonoBehaviour
 {
-    public HashSet<int> occupyCellIndexs = new HashSet<int>();
+    [SerializeField]
+    public List<int> occupyCellIndexs = new List<int>();
 }

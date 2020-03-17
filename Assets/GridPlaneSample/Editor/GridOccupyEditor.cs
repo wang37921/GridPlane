@@ -12,13 +12,13 @@ public class GridOccupyEditor : Editor
     Vector2 _beginPos;
     Vector2 _endPos;
 
-    HashSet<int> _brushingGrids = new HashSet<int>();
+    HashSet<int> _brushingCells = new HashSet<int>();
 
     private void OnEnable()
     {
         var gridOccupy = target as GridOccupy;
         var gridPlane = gridOccupy.GetComponentInParent<GridPlane>();
-        gridOccupy.occupyCellIndexs.RemoveWhere(e => !gridPlane.IsValidCellIndex(e));
+        gridOccupy.occupyCellIndexs.RemoveAll(e => !gridPlane.IsValidCellIndex(e));
     }
 
     public override void OnInspectorGUI()
@@ -38,7 +38,7 @@ public class GridOccupyEditor : Editor
 
         // draw occupy cells
         foreach (var occupyCellIndex in gridOccupy.occupyCellIndexs)
-            DrawCell(occupyCellIndex, Color.red, Color.blue);
+            GridPlaneEditor.DrawCell(gridPlane, occupyCellIndex, Color.red, Color.blue);
 
         // edit occupy cells
         if (_isEditing)
@@ -60,22 +60,22 @@ public class GridOccupyEditor : Editor
                         _isDraging = false;
 
                         Undo.RecordObject(gridOccupy, "Cell Occupy");
-                        gridOccupy.occupyCellIndexs = new HashSet<int>(_brushingGrids);
+                        gridOccupy.occupyCellIndexs = new List<int>(_brushingCells);
 
-                        _brushingGrids.Clear();
+                        _brushingCells.Clear();
                         SceneView.currentDrawingSceneView.Repaint();
                     }
                     else
                     {
                         var clickRay = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-                        var gridIndex = gridPlane.GetGrid(clickRay);
-                        if (gridIndex != -1)
+                        var cellIndex = gridPlane.GetCellIndex(clickRay);
+                        if (cellIndex != -1)
                         {
                             Undo.RecordObject(gridOccupy, "Cell Occupy");
-                            if (gridOccupy.occupyCellIndexs.Contains(gridIndex))
-                                gridOccupy.occupyCellIndexs.Remove(gridIndex);
+                            if (gridOccupy.occupyCellIndexs.Contains(cellIndex))
+                                gridOccupy.occupyCellIndexs.Remove(cellIndex);
                             else
-                                gridOccupy.occupyCellIndexs.Add(gridIndex);
+                                gridOccupy.occupyCellIndexs.Add(cellIndex);
                             SceneView.currentDrawingSceneView.Repaint();
                         }
                     }
@@ -94,37 +94,17 @@ public class GridOccupyEditor : Editor
                 Handles.EndGUI();
                 SceneView.currentDrawingSceneView.Repaint();
 
-                for (var gridIndex = 0; gridIndex < gridPlane.Grids.Length; ++gridIndex)
+                for (var cellIndex = 0; cellIndex < gridPlane.Cells.Length; ++cellIndex)
                 {
-                    var gridCenterInWorld = gridPlane.GetGridCenter(gridIndex);
-                    var gridCenterInGUI = HandleUtility.WorldToGUIPoint(gridCenterInWorld);
-                    if (dragRectInGUI.Contains(gridCenterInGUI))
+                    var cellCenterInWorld = gridPlane.GetCellCenter(cellIndex);
+                    var cellCenterInGUI = HandleUtility.WorldToGUIPoint(cellCenterInWorld);
+                    if (dragRectInGUI.Contains(cellCenterInGUI))
                     {
-                        DrawCell(gridIndex, Color.green, Color.blue);
-                        _brushingGrids.Add(gridIndex);
+                        GridPlaneEditor.DrawCell(gridPlane, cellIndex, Color.green, Color.blue);
+                        _brushingCells.Add(cellIndex);
                     }
                 }
             }
         }
-    }
-
-    void DrawCell(int cellIndex, Color fillup, Color outline)
-    {
-        var gridOccupy = target as GridOccupy;
-        var gridPlane = gridOccupy.GetComponentInParent<GridPlane>();
-        var gridCenterInWorld = gridPlane.GetGridCenter(cellIndex);
-        var gridHalfSize = gridPlane.GridSize / 2.0f;
-        Vector3[] verts = new Vector3[]
-        {
-            gridCenterInWorld - gridPlane.transform.right * gridHalfSize.x - gridPlane.transform.forward * gridHalfSize.y,
-            gridCenterInWorld - gridPlane.transform.right * gridHalfSize.x + gridPlane.transform.forward * gridHalfSize.y,
-            gridCenterInWorld + gridPlane.transform.right * gridHalfSize.x + gridPlane.transform.forward * gridHalfSize.y,
-            gridCenterInWorld + gridPlane.transform.right * gridHalfSize.x - gridPlane.transform.forward * gridHalfSize.y,
-        };
-        var rectColor = fillup;
-        rectColor.a = 0.2f;
-        var outlineColor = outline;
-        outlineColor.a = 0.5f;
-        Handles.DrawSolidRectangleWithOutline(verts, rectColor, outlineColor);
     }
 }

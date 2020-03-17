@@ -7,13 +7,13 @@ using System.Collections.Generic;
 public class GridPlaneEditor : Editor
 {
     bool _isEditing = false;
-    GridUsage _editingUsages;
-    HashSet<int> _brushingGrids = new HashSet<int>();
+    CellUsage _editingUsages;
+    HashSet<int> _brushingCells = new HashSet<int>();
 
     private void OnEnable()
     {
         var gridPlane = target as GridPlane;
-        if (gridPlane.Grids == null && (gridPlane.Row > 0 || gridPlane.Column > 0))
+        if (gridPlane.Cells == null && (gridPlane.Row > 0 || gridPlane.Column > 0))
             gridPlane.UpdateDimension(gridPlane.Row, gridPlane.Column);
     }
 
@@ -31,23 +31,23 @@ public class GridPlaneEditor : Editor
         {
             GUILayout.BeginHorizontal();
 
-            var hasPlant = GUILayout.Toggle(_editingUsages.HasFlag(GridUsage.Plant), "作物", GUI.skin.button);
+            var hasPlant = GUILayout.Toggle(_editingUsages.HasFlag(CellUsage.Plant), "作物", GUI.skin.button);
             if (hasPlant)
-                _editingUsages |= GridUsage.Plant;
+                _editingUsages |= CellUsage.Plant;
             else
-                _editingUsages &= ~GridUsage.Plant;
+                _editingUsages &= ~CellUsage.Plant;
 
-            var hasBuilding = GUILayout.Toggle(_editingUsages.HasFlag(GridUsage.Building), "建筑", GUI.skin.button);
+            var hasBuilding = GUILayout.Toggle(_editingUsages.HasFlag(CellUsage.Building), "建筑", GUI.skin.button);
             if (hasBuilding)
-                _editingUsages |= GridUsage.Building;
+                _editingUsages |= CellUsage.Building;
             else
-                _editingUsages &= ~GridUsage.Building;
+                _editingUsages &= ~CellUsage.Building;
 
-            var hasFurniture = GUILayout.Toggle(_editingUsages.HasFlag(GridUsage.Furniture), "家具", GUI.skin.button);
+            var hasFurniture = GUILayout.Toggle(_editingUsages.HasFlag(CellUsage.Furniture), "家具", GUI.skin.button);
             if (hasFurniture)
-                _editingUsages |= GridUsage.Furniture;
+                _editingUsages |= CellUsage.Furniture;
             else
-                _editingUsages &= ~GridUsage.Furniture;
+                _editingUsages &= ~CellUsage.Furniture;
 
             GUILayout.EndHorizontal();
         }
@@ -68,12 +68,12 @@ public class GridPlaneEditor : Editor
         serializedObject.Update();
 
         GUILayout.BeginHorizontal();
-        GUILayout.Label("Grid Size");
-        var gridWidth = serializedObject.FindProperty("_gridSize.x");
-        gridWidth.floatValue = EditorGUILayout.IntField((int)gridWidth.floatValue, GUILayout.Width(60));
+        GUILayout.Label("Cell Size");
+        var cellWidth = serializedObject.FindProperty("_cellSize.x");
+        cellWidth.floatValue = EditorGUILayout.IntField((int)cellWidth.floatValue, GUILayout.Width(60));
         GUILayout.Label("x", GUILayout.Width(15));
-        var gridHeight = serializedObject.FindProperty("_gridSize.y");
-        gridHeight.floatValue = EditorGUILayout.IntField((int)gridHeight.floatValue, GUILayout.Width(60));
+        var cellHeight = serializedObject.FindProperty("_cellSize.y");
+        cellHeight.floatValue = EditorGUILayout.IntField((int)cellHeight.floatValue, GUILayout.Width(60));
         GUILayout.EndHorizontal();
 
         serializedObject.ApplyModifiedProperties();
@@ -104,21 +104,21 @@ public class GridPlaneEditor : Editor
                     {
                         _isDraging = false;
 
-                        foreach (var gridIndex in _brushingGrids)
+                        foreach (var cellIndex in _brushingCells)
                         {
-                            Undo.RecordObject(gridPlane, "Grid Usage");
-                            gridPlane.Grids[gridIndex].UsageFlag = _editingUsages;
+                            Undo.RecordObject(gridPlane, "Cell Usage");
+                            gridPlane.Cells[cellIndex].UsageFlag = _editingUsages;
                         }
-                        _brushingGrids.Clear();
+                        _brushingCells.Clear();
                     }
                     else
                     {
                         var clickRay = HandleUtility.GUIPointToWorldRay(Event.current.mousePosition);
-                        var gridIndex = gridPlane.GetGrid(clickRay);
-                        if (gridIndex != -1)
+                        var cellIndex = gridPlane.GetCellIndex(clickRay);
+                        if (cellIndex != -1)
                         {
-                            Undo.RecordObject(gridPlane, "Grid Usage");
-                            gridPlane.Grids[gridIndex].UsageFlag = _editingUsages;
+                            Undo.RecordObject(gridPlane, "Cell Usage");
+                            gridPlane.Cells[cellIndex].UsageFlag = _editingUsages;
                             SceneView.currentDrawingSceneView.Repaint();
                         }
                     }
@@ -137,26 +137,14 @@ public class GridPlaneEditor : Editor
                 Handles.EndGUI();
                 SceneView.currentDrawingSceneView.Repaint();
 
-                for (var gridIndex = 0; gridIndex < gridPlane.Grids.Length; ++gridIndex)
+                for (var cellIndex = 0; cellIndex < gridPlane.Cells.Length; ++cellIndex)
                 {
-                    var gridCenterInWorld = gridPlane.GetGridCenter(gridIndex);
-                    var gridCenterInGUI = HandleUtility.WorldToGUIPoint(gridCenterInWorld);
+                    var cellCenterInWorld = gridPlane.GetCellCenter(cellIndex);
+                    var gridCenterInGUI = HandleUtility.WorldToGUIPoint(cellCenterInWorld);
                     if (dragRectInGUI.Contains(gridCenterInGUI))
                     {
-                        var gridHalfSize = gridPlane.GridSize / 2.0f;
-                        Vector3[] verts = new Vector3[]
-                        {
-                            gridCenterInWorld - gridPlane.transform.right * gridHalfSize.x - gridPlane.transform.forward * gridHalfSize.y,
-                            gridCenterInWorld - gridPlane.transform.right * gridHalfSize.x + gridPlane.transform.forward * gridHalfSize.y,
-                            gridCenterInWorld + gridPlane.transform.right * gridHalfSize.x + gridPlane.transform.forward * gridHalfSize.y,
-                            gridCenterInWorld + gridPlane.transform.right * gridHalfSize.x - gridPlane.transform.forward * gridHalfSize.y,
-                        };
-                        var rectColor = Color.green;
-                        rectColor.a = 0.2f;
-                        var outlineColor = Color.blue;
-                        outlineColor.a = 0.5f;
-                        Handles.DrawSolidRectangleWithOutline(verts, rectColor, outlineColor);
-                        _brushingGrids.Add(gridIndex);
+                        DrawCell(gridPlane, cellIndex, Color.green, Color.blue);
+                        _brushingCells.Add(cellIndex);
                     }
                 }
             }
@@ -173,24 +161,24 @@ public class GridPlaneEditor : Editor
             Gizmos.DrawLine(gridPlane.ColumnBeginPosition(col), gridPlane.ColumnEndPosition(col));
         Gizmos.color = Color.white;
 
-        for (var gridIndex = 0; gridIndex != gridPlane.Grids.Length; ++gridIndex)
+        for (var cellIndex = 0; cellIndex != gridPlane.Cells.Length; ++cellIndex)
         {
-            var grid = gridPlane.Grids[gridIndex];
-            var cellOrigin = gridPlane.GetGridOrigin(gridIndex) + new Vector3(1, 0, 1) * 0.25f;
-            if (grid != null)
+            var cell = gridPlane.Cells[cellIndex];
+            var cellOrigin = gridPlane.GetCellOrigin(cellIndex) + new Vector3(1, 0, 1) * 0.25f;
+            if (cell != null)
             {
-                if (grid.UsageFlag.HasFlag(GridUsage.Plant))
-                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
-                if (grid.UsageFlag.HasFlag(GridUsage.Furniture))
-                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
-                if (grid.UsageFlag.HasFlag(GridUsage.Building))
-                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
+                if (cell.UsageFlag.HasFlag(CellUsage.Plant))
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
+                if (cell.UsageFlag.HasFlag(CellUsage.Furniture))
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
+                if (cell.UsageFlag.HasFlag(CellUsage.Building))
+                    Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
             }
             else
             {
-                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
-                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
-                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.GridSize.x, gridPlane.GridSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 0), "plant");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 1), "furniture");
+                Gizmos.DrawIcon(GetCellItemPosition(cellOrigin, gridPlane.CellSize.x, gridPlane.CellSize.y, Vector3.right, Vector3.forward, 3, 2), "building");
             }
         }
     }
@@ -210,5 +198,22 @@ public class GridPlaneEditor : Editor
         var row = itemIndex / rectDimension;
         var col = itemIndex % rectDimension;
         return originPos + mainAxis * col / rectDimension * cellWidth + crossAxis * row / rectDimension * cellHeight;
+    }
+    public static void DrawCell(GridPlane gridPlane, int cellIndex, Color fillup, Color outline)
+    {
+        var cellCenterInWorld = gridPlane.GetCellCenter(cellIndex);
+        var cellHalfSize = gridPlane.CellSize / 2.0f;
+        Vector3[] verts = new Vector3[]
+        {
+            cellCenterInWorld - gridPlane.transform.right * cellHalfSize.x - gridPlane.transform.forward * cellHalfSize.y,
+            cellCenterInWorld - gridPlane.transform.right * cellHalfSize.x + gridPlane.transform.forward * cellHalfSize.y,
+            cellCenterInWorld + gridPlane.transform.right * cellHalfSize.x + gridPlane.transform.forward * cellHalfSize.y,
+            cellCenterInWorld + gridPlane.transform.right * cellHalfSize.x - gridPlane.transform.forward * cellHalfSize.y,
+        };
+        var rectColor = fillup;
+        rectColor.a = 0.2f;
+        var outlineColor = outline;
+        outlineColor.a = 0.5f;
+        Handles.DrawSolidRectangleWithOutline(verts, rectColor, outlineColor);
     }
 }
