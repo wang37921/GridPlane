@@ -1,0 +1,16 @@
+{
+    "name": "i50Games.GridPlane.Editor",
+    "references": [
+        "i50Games.GridPlane"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}
